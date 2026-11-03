@@ -34,6 +34,7 @@ $blockedPatterns = [
     '#^/dokumen pbl(/|$)#i',
     '#^/api(/|$)#i',
     '#\.(sql|md|ini|log|lock|example|yml|yaml|json|txt|sh|bat)$#i',
+    '#^(/(menu|admin))?/components/.*\.php$#i',   // potongan layout, bukan halaman
 ];
 
 foreach ($blockedPatterns as $pattern) {
@@ -88,6 +89,9 @@ if ($extension !== '' && isset($staticExtensions[$extension])) {
 // ---------------------------------------------------------------
 if ($path === '/' || $path === '/index.php') {
     $target = $root . '/beranda.php';
+} elseif ($path === '/admin' || $path === '/admin/') {
+    // Supaya alamat /admin bisa dibuka langsung seperti yang tertulis di README.
+    $target = $root . '/admin/index.php';
 } else {
     if (substr($path, -1) === '/') {
         $path .= 'index.php';

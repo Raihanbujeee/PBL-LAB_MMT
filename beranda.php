@@ -4,7 +4,8 @@
 // ==================================================
 // BOOTSTRAP SYSTEM
 // ==================================================
-if (!isset($_SESSION)) session_start();
+require_once __DIR__ . '/config/auth.php';
+startSecureSession();
 
 require_once __DIR__ . "/config/db.php";        // Koneksi database
 require_once __DIR__ . "/config/settings.php";  // Global site config

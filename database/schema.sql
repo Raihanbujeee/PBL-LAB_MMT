@@ -30,12 +30,15 @@ DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 DROP TRIGGER IF EXISTS update_projects_updated_at ON public.projects;
 DROP TRIGGER IF EXISTS update_news_updated_at ON public.news;
 DROP TRIGGER IF EXISTS update_comments_updated_at ON public.comments;
+DROP INDEX IF EXISTS public.idx_sessions_last_activity;
 DROP INDEX IF EXISTS public.idx_projects_created_at;
 DROP INDEX IF EXISTS public.idx_news_tags_tag;
 DROP INDEX IF EXISTS public.idx_news_created_at;
 DROP INDEX IF EXISTS public.idx_mv_project_details_year;
+DROP INDEX IF EXISTS public.idx_mv_project_details_unique;
 DROP INDEX IF EXISTS public.idx_mv_project_details_rating;
 DROP INDEX IF EXISTS public.idx_mv_project_details_id;
+DROP INDEX IF EXISTS public.idx_mv_news_stats_unique;
 DROP INDEX IF EXISTS public.idx_mv_news_stats_created;
 DROP INDEX IF EXISTS public.idx_mv_news_stats_category;
 DROP INDEX IF EXISTS public.idx_mv_monthly_activity_month;
@@ -45,6 +48,7 @@ ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
 ALTER TABLE IF EXISTS ONLY public.tags DROP CONSTRAINT IF EXISTS tags_slug_key;
 ALTER TABLE IF EXISTS ONLY public.tags DROP CONSTRAINT IF EXISTS tags_pkey;
+ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
 ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_slug_key;
 ALTER TABLE IF EXISTS ONLY public.projects DROP CONSTRAINT IF EXISTS projects_pkey;
 ALTER TABLE IF EXISTS ONLY public.project_tags DROP CONSTRAINT IF EXISTS project_tags_pkey;
@@ -77,6 +81,7 @@ ALTER TABLE IF EXISTS public.activity_logs ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS public.users_id_seq;
 DROP SEQUENCE IF EXISTS public.tags_id_seq;
 DROP TABLE IF EXISTS public.tags;
+DROP TABLE IF EXISTS public.sessions;
 DROP SEQUENCE IF EXISTS public.projects_id_seq;
 DROP TABLE IF EXISTS public.project_tags;
 DROP SEQUENCE IF EXISTS public.project_members_id_seq;
@@ -981,6 +986,17 @@ ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
 --
+-- Name: sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sessions (
+    id character varying(128) NOT NULL,
+    data text NOT NULL,
+    last_activity integer NOT NULL
+);
+
+
+--
 -- Name: tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1136,17 +1152,12 @@ INSERT INTO public.activity_logs VALUES (9, 'admin2', 'Login Berhasil', '::1', '
 INSERT INTO public.activity_logs VALUES (10, 'admin2', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-19 21:29:21.744338');
 INSERT INTO public.activity_logs VALUES (11, 'admin2', 'Logout Berhasil', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-19 21:30:01.564164');
 INSERT INTO public.activity_logs VALUES (12, 'admin2', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', '2025-12-19 21:38:14.040979');
-INSERT INTO public.activity_logs VALUES (13, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 00:54:55.661459');
-INSERT INTO public.activity_logs VALUES (14, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:27:46.280672');
-INSERT INTO public.activity_logs VALUES (15, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:27:54.236711');
-INSERT INTO public.activity_logs VALUES (16, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:28:03.56885');
-INSERT INTO public.activity_logs VALUES (17, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:29:07.404801');
-INSERT INTO public.activity_logs VALUES (18, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:32:46.534562');
-INSERT INTO public.activity_logs VALUES (19, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:32:54.278023');
-INSERT INTO public.activity_logs VALUES (20, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:38:02.470018');
-INSERT INTO public.activity_logs VALUES (21, 'Admin Lab', 'Update Pengaturan Situs', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:38:02.817306');
-INSERT INTO public.activity_logs VALUES (22, 'Admin Lab', 'Update Profil Lab', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:38:03.098993');
-INSERT INTO public.activity_logs VALUES (23, 'Editor 1', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.6133', '2026-10-29 01:38:13.797721');
+INSERT INTO public.activity_logs VALUES (31, 'Admin Lab', 'Login Berhasil', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', '2026-10-09 00:47:15.089928');
+INSERT INTO public.activity_logs VALUES (32, 'Admin Lab', 'Update Pengaturan Situs', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', '2026-10-09 00:51:15.089928');
+INSERT INTO public.activity_logs VALUES (33, 'Editor 1', 'Login Berhasil', '::1', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15', '2026-10-21 00:47:15.089928');
+INSERT INTO public.activity_logs VALUES (34, 'Editor 1', 'Tambah Berita: Kuliah Tamu Big Data', '::1', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15', '2026-10-21 00:59:15.089928');
+INSERT INTO public.activity_logs VALUES (35, 'Admin Lab', 'Update Profil Lab', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', '2026-10-29 00:47:15.089928');
+INSERT INTO public.activity_logs VALUES (36, 'Admin Lab', 'Logout Berhasil', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', '2026-10-29 01:22:15.089928');
 
 
 --
@@ -1184,8 +1195,8 @@ INSERT INTO public.comments VALUES (10, 'news', 10, 'admin2', '', 5, 'wihh keren
 -- Data for Name: feedback; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.feedback VALUES (80, 'Rani Kusuma', 'rani.kusuma@example.com', 'Tanya jadwal pelatihan IoT', 'Selamat pagi, apakah pelatihan IoT untuk semester ini dibuka untuk mahasiswa dari jurusan lain? Terima kasih.', '2026-10-27 01:29:24.081031', false);
 INSERT INTO public.feedback VALUES (81, 'Bagus Prasetyo', 'bagus.prasetyo@example.com', 'Kerja sama proyek aplikasi mobile', 'Kami dari komunitas developer Malang ingin mengajak kolaborasi untuk pengembangan aplikasi mobile edukasi. Mohon info kontak yang bisa dihubungi.', '2026-10-20 01:29:24.081031', true);
+INSERT INTO public.feedback VALUES (80, 'Rani Kusuma', 'rani.kusuma@example.com', 'Tanya jadwal pelatihan IoT', 'Selamat pagi, apakah pelatihan IoT untuk semester ini dibuka untuk mahasiswa dari jurusan lain? Terima kasih.', '2026-10-27 01:29:24.081031', false);
 
 
 --
@@ -1311,7 +1322,7 @@ INSERT INTO public.tags VALUES (10, 'React', 'react');
 -- Name: activity_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.activity_logs_id_seq', 23, true);
+SELECT pg_catalog.setval('public.activity_logs_id_seq', 40, true);
 
 
 --
@@ -1325,7 +1336,7 @@ SELECT pg_catalog.setval('public.categories_id_seq', 12, true);
 -- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.comments_id_seq', 10, true);
+SELECT pg_catalog.setval('public.comments_id_seq', 11, true);
 
 
 --
@@ -1360,7 +1371,7 @@ SELECT pg_catalog.setval('public.members_id_seq', 4, true);
 -- Name: news_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.news_id_seq', 13, true);
+SELECT pg_catalog.setval('public.news_id_seq', 14, true);
 
 
 --
@@ -1527,6 +1538,14 @@ ALTER TABLE ONLY public.projects
 
 
 --
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1594,6 +1613,13 @@ CREATE INDEX idx_mv_news_stats_created ON public.mv_news_with_stats USING btree 
 
 
 --
+-- Name: idx_mv_news_stats_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_mv_news_stats_unique ON public.mv_news_with_stats USING btree (id);
+
+
+--
 -- Name: idx_mv_project_details_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1605,6 +1631,13 @@ CREATE INDEX idx_mv_project_details_id ON public.mv_project_details USING btree 
 --
 
 CREATE INDEX idx_mv_project_details_rating ON public.mv_project_details USING btree (avg_rating DESC);
+
+
+--
+-- Name: idx_mv_project_details_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_mv_project_details_unique ON public.mv_project_details USING btree (id);
 
 
 --
@@ -1633,6 +1666,13 @@ CREATE INDEX idx_news_tags_tag ON public.news_tags USING btree (tag_id);
 --
 
 CREATE INDEX idx_projects_created_at ON public.projects USING btree (created_at);
+
+
+--
+-- Name: idx_sessions_last_activity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_last_activity ON public.sessions USING btree (last_activity);
 
 
 --

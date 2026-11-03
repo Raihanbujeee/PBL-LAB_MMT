@@ -199,6 +199,12 @@ function performBackup(type) {
             message += `File: ${data.data.filename}<br>`;
             message += `Size: ${formatBytes(data.data.size)}<br>`;
             message += `Summary: ${data.data.summary.total_projects} proyek, ${data.data.summary.total_news} berita, ${data.data.summary.total_members} anggota`;
+
+            // Di server tanpa penyimpanan permanen, berkas dikirim lewat tautan unduh.
+            if (!data.data.file_path && data.data.download) {
+                message += `<br><a href="${data.data.download}" download="${data.data.filename}">Unduh berkas backup</a>`;
+            }
+
             showAlert('backupResult', message, 'success');
         } else {
             showAlert('backupResult', data.message, 'danger');

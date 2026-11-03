@@ -32,6 +32,7 @@ menjadi aplikasi siap pakai dan siap deploy.
 
 - PostgreSQL: foreign key, trigger, function, stored procedure, materialized view
 - Password disimpan sebagai hash bcrypt (`password_hash` / `password_verify`)
+- Sesi login disimpan di tabel `sessions` agar tetap berlaku di beberapa instance
 - Proteksi CSRF pada seluruh formulir, guard otorisasi pada semua endpoint admin
 - Validasi unggahan file berdasarkan ekstensi, ukuran, dan tipe MIME
 - Konfigurasi database lewat environment variable (aman untuk hosting)
@@ -122,16 +123,20 @@ Prasyarat: PHP 8.1+ dengan ekstensi `pdo_pgsql` dan `gd`, serta PostgreSQL.
    Bisa juga memakai variabel terpisah: `DB_HOST`, `DB_PORT`, `DB_NAME`,
    `DB_USER`, `DB_PASSWORD`, `DB_SSLMODE=require`.
 
-5. **Deploy.** Vercel otomatis memakai `vercel.json` (runtime `vercel-php`)
-   dan mengarahkan semua request ke `api/index.php`.
+5. **Deploy.** Vercel otomatis memakai `vercel.json`
+   (runtime `vercel-php@0.7.4` dengan PHP 8.3, sehingga versi PHP-nya sama
+   dengan yang dipakai saat pengujian lokal) dan mengarahkan semua request ke
+   `api/index.php`. Tidak perlu Build Command atau Output Directory.
 
 ### Catatan saat berjalan di Vercel
 
 - Folder proyek bersifat **read-only**. Fitur unggah file tetap ada tetapi akan
   menampilkan pesan bahwa penyimpanan tidak tersedia (mode demo). Backup juga
-  dikirim sebagai respons unduhan, bukan disimpan ke disk.
-- Sesi login disimpan di `/tmp` dan bisa hilang saat instance didaur ulang.
-  Untuk produksi jangka panjang, gunakan penyimpanan sesi terpusat.
+  dikirim sebagai tautan unduhan, bukan disimpan ke disk.
+- Sesi login disimpan di tabel `sessions` pada database, jadi pengguna tidak
+  ter-logout saat request dilayani instance serverless yang berbeda.
+- CAPTCHA digambar sebagai PNG bila ekstensi GD tersedia. Di Vercel (tanpa GD)
+  gambar dibuat dalam format SVG dengan aturan yang sama.
 - File media besar (video) dilayani sebagai aset statis, bukan lewat function.
 
 ## Akun Demo

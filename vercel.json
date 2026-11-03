@@ -2,16 +2,28 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/index.php": {
-      "runtime": "vercel-php@0.9.0",
-      "memory": 1024,
+      "runtime": "vercel-php@0.7.4",
       "maxDuration": 30
     }
   },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" }
+      ]
+    }
+  ],
   "routes": [
     { "src": "/favicon.ico", "dest": "/assets/images/favicon.png" },
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/admin/assets/(.*)", "dest": "/admin/assets/$1" },
     { "src": "/menu/assets/(.*)", "dest": "/menu/assets/$1" },
+    { "src": "/([^/]+)/assets/(.*)", "dest": "/$1/assets/$2" },
     { "src": "/menu/components/(navbar|floating-profile)\\.css", "dest": "/menu/components/$1.css" },
     { "src": "/menu/components/(navbar|floating-profile)\\.js", "dest": "/menu/components/$1.js" },
     { "src": "/(.*)", "dest": "/api/index.php" }

@@ -51,6 +51,11 @@ DROP INDEX IF EXISTS public.idx_mv_dashboard_refresh;
 
 CREATE UNIQUE INDEX idx_mv_dashboard_unique ON public.mv_lab_dashboard_stats (total_news);
 
+-- View lain juga diberi index unik pada kolom id supaya refresh-nya bisa
+-- memakai CONCURRENTLY (tidak mengunci tabel saat dibaca).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_news_stats_unique ON public.mv_news_with_stats (id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_project_details_unique ON public.mv_project_details (id);
+
 -- ---------------------------------------------------------------------
 -- 4. Hapus baris profil lab yang kosong (duplikat)
 -- ---------------------------------------------------------------------
@@ -70,3 +75,16 @@ WHERE email = 'admin@labpolinema.ac.id';
 UPDATE public.users
 SET password = '$2y$10$dGnAqRCHCUzepWkl0Wf6pOLl8gDjzs0TjQGUFMOnE/7z4IgRE8E/S'
 WHERE email = 'editor1@labpolinema.ac.id';
+
+-- ---------------------------------------------------------------------
+-- 6. Tabel penyimpanan sesi
+--    Dipakai config/session.php agar pengguna tidak ter-logout saat
+--    request dilayani instance serverless yang berbeda.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.sessions (
+    id varchar(128) PRIMARY KEY,
+    data text NOT NULL,
+    last_activity integer NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_last_activity ON public.sessions (last_activity);

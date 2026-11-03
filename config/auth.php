@@ -11,10 +11,15 @@ if (!function_exists('startSecureSession')) {
             return;
         }
 
-        // Di serverless folder sesi default bisa read-only, arahkan ke /tmp.
-        if (session_save_path() === '' || !is_writable(session_save_path())) {
-            session_save_path(sys_get_temp_dir());
-        }
+        require_once __DIR__ . '/database.php';
+        require_once __DIR__ . '/session.php';
+
+        // Sesi disimpan di database supaya tidak hilang saat instance serverless
+        // didaur ulang atau request dilayani instance lain.
+        session_set_save_handler(new DatabaseSessionHandler(db()), true);
+
+        // Sesi dibiarkan berlaku 2 jam sejak aktivitas terakhir.
+        ini_set('session.gc_maxlifetime', '7200');
 
         $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
             || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
@@ -126,13 +131,16 @@ if (!function_exists('loginUrl')) {
      */
     function loginUrl(): string
     {
-        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-        $path = trim($path, '/');
+        $urlPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
-        // Jumlah folder pada URL menentukan berapa kali harus naik (../).
-        $depth = $path === '' ? 0 : substr_count($path, '/');
+        // Kalau URI diakhiri "/", yang diminta adalah folder, bukan berkas.
+        $endsWithSlash = substr($urlPath, -1) === '/';
+        $path = trim($urlPath, '/');
 
-        return str_repeat('../', max(0, $depth)) . 'menu/login.php';
+        $segments = $path === '' ? 0 : substr_count($path, '/') + 1;
+        $depth = $endsWithSlash ? $segments : max(0, $segments - 1);
+
+        return str_repeat('../', $depth) . 'menu/login.php';
     }
 }
 
